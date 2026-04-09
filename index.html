@@ -3,688 +3,375 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>명상 가이드 - Jamystrology</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
-  <script src="https://unpkg.com/ml5@0.12.2/dist/ml5.min.js"></script>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; background: #0a0a1a; overflow: hidden; }
-    #canvas-container { position: relative; width: 100vw; height: 100vh; }
-    #status-overlay {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      color: #a78bfa;
-      font-family: 'Georgia', serif;
-      pointer-events: none;
-      z-index: 10;
-    }
-    #status-overlay h2 { font-size: 1.4rem; margin-bottom: 0.5rem; }
-    #status-overlay p { font-size: 0.9rem; color: #c4b5fd; }
-    #loading-spinner {
-      width: 50px; height: 50px;
-      border: 3px solid #2d1b69;
-      border-top-color: #7c3aed;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 1rem;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    #back-btn {
-      position: absolute;
-      top: 1rem;
-      left: 1rem;
-      background: rgba(124, 58, 237, 0.3);
-      color: #c4b5fd;
-      border: 1px solid #7c3aed;
-      padding: 0.4rem 0.9rem;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.85rem;
-      z-index: 20;
-      text-decoration: none;
-      font-family: sans-serif;
-    }
-    #back-btn:hover { background: rgba(124, 58, 237, 0.5); }
-    #timer-display {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      color: #a78bfa;
-      font-family: 'Georgia', serif;
-      font-size: 1rem;
-      z-index: 20;
-      text-align: right;
-    }
-    #chakra-legend {
-      position: absolute;
-      bottom: 1rem;
-      right: 1rem;
-      z-index: 20;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .chakra-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      color: #c4b5fd;
-      font-family: sans-serif;
-      font-size: 0.72rem;
-    }
-    .chakra-dot {
-      width: 10px; height: 10px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-  </style>
+  <title>나온 명상 — 건강한 마음, 건강한 삶</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Serif+KR:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <a id="back-btn" href="/">← 홈으로</a>
-  <div id="timer-display">
-    <div id="session-timer">00:00</div>
-    <div id="pose-status" style="font-size:0.75rem; color:#7c3aed; margin-top:2px;"></div>
+
+  <!-- ── HEADER ───────────────────────────────────────────────── -->
+  <header class="site-header" id="site-header">
+    <div class="header-inner">
+      <!-- Logo -->
+      <a href="index.html" class="logo-link">
+        <svg viewBox="0 0 260 70" width="160" height="42" aria-label="나온 명상">
+          <!-- 나 -->
+          <text x="2"  y="54" class="logo-green">나</text>
+          <!-- 온 — O is a circle -->
+          <text x="58" y="54" class="logo-green">온</text>
+          <!-- gap -->
+          <!-- 명 -->
+          <text x="138" y="54" class="logo-amber">명</text>
+          <!-- 상 -->
+          <text x="196" y="54" class="logo-amber">상</text>
+        </svg>
+      </a>
+
+      <!-- Nav -->
+      <nav class="main-nav" id="main-nav">
+        <ul>
+          <li><a href="meditation.html">명상법</a></li>
+          <li><a href="health.html">건강</a></li>
+          <li><a href="mindfulness.html">마음챙김</a></li>
+          <li><a href="science.html">과학</a></li>
+          <li><a href="community.html">커뮤니티</a></li>
+        </ul>
+      </nav>
+
+      <!-- CTA -->
+      <div class="header-actions">
+        <a href="app.html" class="btn-start">AI 명상 시작</a>
+        <button class="hamburger" id="hamburger" aria-label="메뉴">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── BREAKING BAR ─────────────────────────────────────────── -->
+  <div class="breaking-bar">
+    <span class="breaking-label">신규</span>
+    <a href="#">AI PoseNet 차크라 명상 가이드가 출시되었습니다 →</a>
   </div>
-  <div id="chakra-legend">
-    <div class="chakra-item"><div class="chakra-dot" style="background:#9b59b6"></div>왕관 차크라</div>
-    <div class="chakra-item"><div class="chakra-dot" style="background:#4b6cb7"></div>제3의 눈</div>
-    <div class="chakra-item"><div class="chakra-dot" style="background:#00bcd4"></div>목 차크라</div>
-    <div class="chakra-item"><div class="chakra-dot" style="background:#4caf50"></div>심장 차크라</div>
-    <div class="chakra-item"><div class="chakra-dot" style="background:#ffeb3b"></div>태양신경총</div>
-    <div class="chakra-item"><div class="chakra-dot" style="background:#ff9800"></div>천골 차크라</div>
-    <div class="chakra-item"><div class="chakra-dot" style="background:#f44336"></div>근원 차크라</div>
-  </div>
-  <div id="canvas-container"></div>
-  <div id="status-overlay">
-    <div id="loading-spinner"></div>
-    <h2>AI 명상 가이드 로딩 중</h2>
-    <p>카메라와 포즈 감지 모델을 초기화하고 있습니다...</p>
-  </div>
-
-<script>
-// ─── Chakra definitions ───────────────────────────────────────────────
-const CHAKRAS = [
-  { name: '왕관', color: [155, 89, 182], glow: [200, 130, 255] },
-  { name: '제3의 눈', color: [75, 108, 183], glow: [100, 150, 255] },
-  { name: '목', color: [0, 188, 212], glow: [100, 220, 255] },
-  { name: '심장', color: [76, 175, 80], glow: [100, 255, 130] },
-  { name: '태양신경총', color: [255, 235, 59], glow: [255, 245, 150] },
-  { name: '천골', color: [255, 152, 0], glow: [255, 180, 80] },
-  { name: '근원', color: [244, 67, 54], glow: [255, 100, 80] },
-];
-
-// ─── Breathing modes ──────────────────────────────────────────────────
-const BREATH_MODES = [
-  { name: '일반 호흡', desc: '4 · 4', phases: [
-    { label: '들숨', frames: 240, fromVal: 0, toVal: 1 },
-    { label: '날숨', frames: 240, fromVal: 1, toVal: 0 },
-  ]},
-  { name: '4-7-8 호흡', desc: '4 · 7 · 8', phases: [
-    { label: '들숨', frames: 240, fromVal: 0, toVal: 1 },
-    { label: '참기',  frames: 420, fromVal: 1, toVal: 1 },
-    { label: '날숨', frames: 480, fromVal: 1, toVal: 0 },
-  ]},
-  { name: '박스 호흡', desc: '4 · 4 · 4 · 4', phases: [
-    { label: '들숨', frames: 240, fromVal: 0, toVal: 1 },
-    { label: '참기',  frames: 240, fromVal: 1, toVal: 1 },
-    { label: '날숨', frames: 240, fromVal: 1, toVal: 0 },
-    { label: '참기',  frames: 240, fromVal: 0, toVal: 0 },
-  ]},
-];
-
-// ─── Global state ─────────────────────────────────────────────────────
-let video, poseNet, pose = null;
-let modelReady = false;
-let particles = [];
-let breathPhase = 0;
-let breathModeIdx = 0;
-let breathPhaseIdx = 0;
-let breathTimer = 0;
-let sessionStart = Date.now();
-let meditationScore = 0;
-let bgStars = [];
-// Per-chakra smooth activation (0–1 each)
-let chakraActivations = [0, 0, 0, 0, 0, 0, 0];
-// Smooth alignment scores for UI feedback
-let smoothShoulder = 0, smoothSpine = 0, smoothHip = 0;
-let smoothShoulderTilt = 0, smoothSpineLean = 0;
-
-// ─── p5.js sketch ─────────────────────────────────────────────────────
-const sketch = (p) => {
-
-  p.setup = () => {
-    const cnv = p.createCanvas(p.windowWidth, p.windowHeight);
-    cnv.parent('canvas-container');
-    p.colorMode(p.RGB, 255, 255, 255, 255);
-    p.noStroke();
-
-    // Create background stars
-    for (let i = 0; i < 180; i++) {
-      bgStars.push({
-        x: p.random(p.width),
-        y: p.random(p.height),
-        r: p.random(0.5, 2.5),
-        twinkle: p.random(p.TWO_PI),
-      });
-    }
-
-    // Breathing guide click — native DOM listener on canvas element
-    cnv.elt.addEventListener('click', (e) => {
-      const rect = cnv.elt.getBoundingClientRect();
-      const mx = e.clientX - rect.left;
-      const my = e.clientY - rect.top;
-      const cx = 88, cy = p.height - 88;
-      if (Math.hypot(mx - cx, my - cy) < 56) {
-        breathModeIdx  = (breathModeIdx + 1) % BREATH_MODES.length;
-        breathPhaseIdx = 0;
-        breathTimer    = 0;
-        breathPhase    = 0;
-      }
-    });
-
-    // Cursor change via mousemove on canvas
-    cnv.elt.addEventListener('mousemove', (e) => {
-      const rect = cnv.elt.getBoundingClientRect();
-      const mx = e.clientX - rect.left;
-      const my = e.clientY - rect.top;
-      const cx = 88, cy = p.height - 88;
-      cnv.elt.style.cursor = Math.hypot(mx - cx, my - cy) < 56 ? 'pointer' : 'default';
-    });
-
-    // Start webcam
-    video = p.createCapture(p.VIDEO);
-    video.size(640, 480);
-    video.hide();
-
-    // Load PoseNet via ml5
-    const options = { imageScaleFactor: 0.4, outputStride: 16, flipHorizontal: true, minConfidence: 0.4 };
-    poseNet = ml5.poseNet(video, options, () => {
-      modelReady = true;
-      document.getElementById('status-overlay').style.display = 'none';
-    });
-    poseNet.on('pose', (results) => {
-      pose = results.length > 0 ? results[0].pose : null;
-    });
-  };
-
-  p.windowResized = () => {
-    p.resizeCanvas(p.windowWidth, p.windowHeight);
-  };
-
-  p.draw = () => {
-    // Dark cosmic background
-    p.background(8, 8, 22);
-
-    // Draw stars
-    drawStars(p);
-
-    // Breathing cycle — driven by current mode
-    const bMode = BREATH_MODES[breathModeIdx];
-    const bPh   = bMode.phases[breathPhaseIdx];
-    breathTimer++;
-    const prog = Math.min(breathTimer / bPh.frames, 1);
-    breathPhase = bPh.fromVal + (bPh.toVal - bPh.fromVal) * prog;
-    if (breathTimer >= bPh.frames) {
-      breathTimer = 0;
-      breathPhaseIdx = (breathPhaseIdx + 1) % bMode.phases.length;
-    }
-
-    // Update timer
-    updateTimer();
-
-    // Draw video feed (mirrored, dark overlay)
-    drawVideo(p);
-
-    if (!modelReady) return;
-
-    if (pose) {
-      const chakraPositions = getChakraPositions(pose, p);
-
-      // Per-chakra alignment scores
-      const align = getAlignmentScores(pose);
-
-      // Smooth all scores
-      for (let i = 0; i < 7; i++)
-        chakraActivations[i] = chakraActivations[i] * 0.93 + align.chakraScores[i] * 0.07;
-      smoothShoulder  = smoothShoulder  * 0.93 + align.shoulderScore  * 0.07;
-      smoothSpine     = smoothSpine     * 0.93 + align.spineScore     * 0.07;
-      smoothHip       = smoothHip       * 0.93 + align.hipScore       * 0.07;
-      smoothShoulderTilt = smoothShoulderTilt * 0.85 + align.shoulderTilt * 0.15;
-      smoothSpineLean    = smoothSpineLean    * 0.85 + align.spineLean    * 0.15;
-
-      meditationScore = chakraActivations.reduce((a, b) => a + b, 0) / 7;
-
-      // Draw layers
-      drawAura(p, pose, meditationScore);
-      drawAlignmentGuides(p, pose, align);
-      drawSkeleton(p, pose);
-      emitParticles(p, chakraPositions);
-      drawChakras(p, chakraPositions);
-
-      // Status feedback
-      updatePoseStatus(align);
-    } else {
-      document.getElementById('pose-status').textContent = '📷 몸 전체가 보이도록 앉아주세요';
-    }
-
-    updateParticles(p);
-    drawBreathingGuide(p);
-  };
-
-  // ─── Draw background stars ───────────────────────────────────────
-  function drawStars(p) {
-    for (const s of bgStars) {
-      s.twinkle += 0.02;
-      const alpha = 100 + 80 * Math.sin(s.twinkle);
-      p.fill(180, 160, 255, alpha);
-      p.ellipse(s.x, s.y, s.r * 2, s.r * 2);
-    }
-  }
-
-  // ─── Draw semi-transparent video feed ───────────────────────────
-  function drawVideo(p) {
-    if (!video || !video.elt) return;
-    const vw = p.width, vh = p.height;
-    p.push();
-    p.translate(vw, 0);
-    p.scale(-1, 1);
-    p.tint(255, 55); // Very subtle
-    p.image(video, 0, 0, vw, vh);
-    p.noTint();
-    p.pop();
-  }
-
-  // ─── Map PoseNet keypoints to chakra positions ───────────────────
-  function mapPt(kp, p) {
-    // PoseNet already flipped (flipHorizontal: true) → just scale to canvas
-    return {
-      x: kp.x * (p.width / 640),
-      y: kp.y * (p.height / 480),
-      confidence: kp.confidence,
-    };
-  }
-
-  function getChakraPositions(pose, p) {
-    const kp = {};
-    for (const k of pose.keypoints) kp[k.part] = k.position;
-
-    const nose = mapPt({ x: kp.nose?.x || 320, y: kp.nose?.y || 100, confidence: kp.nose ? 1 : 0 }, p);
-    const lShoulder = mapPt({ x: kp.leftShoulder?.x || 250, y: kp.leftShoulder?.y || 200, confidence: 0 }, p);
-    const rShoulder = mapPt({ x: kp.rightShoulder?.x || 390, y: kp.rightShoulder?.y || 200, confidence: 0 }, p);
-    const lHip = mapPt({ x: kp.leftHip?.x || 270, y: kp.leftHip?.y || 350, confidence: 0 }, p);
-    const rHip = mapPt({ x: kp.rightHip?.x || 370, y: kp.rightHip?.y || 350, confidence: 0 }, p);
-
-    const shoulderMidX = (lShoulder.x + rShoulder.x) / 2;
-    const shoulderMidY = (lShoulder.y + rShoulder.y) / 2;
-    const hipMidX = (lHip.x + rHip.x) / 2;
-    const hipMidY = (lHip.y + rHip.y) / 2;
-
-    const headHeight = shoulderMidY - nose.y;
-
-    return [
-      // Crown — above head
-      { x: nose.x, y: nose.y - headHeight * 0.8 },
-      // Third Eye — nose
-      { x: nose.x, y: nose.y },
-      // Throat — between nose and shoulders
-      { x: lerp(nose.x, shoulderMidX, 0.6), y: lerp(nose.y, shoulderMidY, 0.5) },
-      // Heart — shoulder midpoint
-      { x: shoulderMidX, y: shoulderMidY },
-      // Solar Plexus
-      { x: lerp(shoulderMidX, hipMidX, 0.35), y: lerp(shoulderMidY, hipMidY, 0.35) },
-      // Sacral
-      { x: lerp(shoulderMidX, hipMidX, 0.68), y: lerp(shoulderMidY, hipMidY, 0.68) },
-      // Root — hip midpoint
-      { x: hipMidX, y: hipMidY },
-    ];
-  }
-
-  function lerp(a, b, t) { return a + (b - a) * t; }
-
-  // ─── Per-chakra alignment scores ─────────────────────────────────
-  function getAlignmentScores(pose) {
-    const kp = {};
-    for (const k of pose.keypoints) if (k.score > 0.4) kp[k.part] = k.position;
-
-    // ── Shoulder level ──────────────────────────────────────────────
-    let shoulderScore = 0, shoulderTilt = 0;
-    if (kp.leftShoulder && kp.rightShoulder) {
-      const bw = Math.abs(kp.leftShoulder.x - kp.rightShoulder.x) || 100;
-      // positive tilt → left shoulder higher (lower y in image coords)
-      shoulderTilt = (kp.rightShoulder.y - kp.leftShoulder.y) / bw;
-      shoulderScore = Math.max(0, 1 - Math.abs(shoulderTilt) / 0.28);
-    }
-
-    // ── Spine alignment (shoulder-mid ↔ hip-mid ↔ nose) ────────────
-    let spineScore = 0, spineLean = 0;
-    if (kp.nose && kp.leftShoulder && kp.rightShoulder && kp.leftHip && kp.rightHip) {
-      const bw = Math.abs(kp.leftShoulder.x - kp.rightShoulder.x) || 100;
-      const smx = (kp.leftShoulder.x + kp.rightShoulder.x) / 2;
-      const hmx = (kp.leftHip.x + kp.rightHip.x) / 2;
-      // positive lean → torso leaning right in PoseNet space
-      spineLean = (smx - hmx) / bw;
-      const noseLean = (kp.nose.x - smx) / bw;
-      const totalDev = Math.abs(spineLean) + Math.abs(noseLean) * 0.5;
-      spineScore = Math.max(0, 1 - totalDev / 0.35);
-    }
-
-    // ── Hip level ───────────────────────────────────────────────────
-    let hipScore = 0;
-    if (kp.leftHip && kp.rightHip) {
-      const hw = Math.abs(kp.leftHip.x - kp.rightHip.x) || 100;
-      const diff = Math.abs(kp.leftHip.y - kp.rightHip.y);
-      hipScore = Math.max(0, 1 - diff / (hw * 0.28));
-    }
-
-    // ── Per-chakra weights ──────────────────────────────────────────
-    // [crown, thirdEye, throat, heart, solarPlexus, sacral, root]
-    const chakraScores = [
-      spineScore * 0.85 + shoulderScore * 0.15,
-      spineScore * 0.90 + shoulderScore * 0.10,
-      spineScore * 0.65 + shoulderScore * 0.35,
-      spineScore * 0.35 + shoulderScore * 0.65,   // heart: shoulder-dominant
-      spineScore * 0.45 + shoulderScore * 0.30 + hipScore * 0.25,
-      spineScore * 0.30 + hipScore * 0.70,
-      spineScore * 0.20 + hipScore * 0.80,         // root: hip-dominant
-    ];
-
-    return { chakraScores, shoulderScore, spineScore, hipScore, shoulderTilt, spineLean };
-  }
-
-  // ─── Alignment guides drawn on canvas ────────────────────────────
-  function drawAlignmentGuides(p, pose, align) {
-    const kp = {};
-    for (const k of pose.keypoints) if (k.score > 0.4) kp[k.part] = mapPt(k.position, p);
-    if (!kp.nose || !kp.leftShoulder || !kp.rightShoulder) return;
-
-    const smx = (kp.leftShoulder.x + kp.rightShoulder.x) / 2;
-    const smy = (kp.leftShoulder.y + kp.rightShoulder.y) / 2;
-    const hmx = kp.leftHip ? (kp.leftHip.x + (kp.rightHip?.x || kp.leftHip.x)) / 2 : smx;
-    const hmy = kp.leftHip ? (kp.leftHip.y + (kp.rightHip?.y || kp.leftHip.y)) / 2 : smy + 120;
-
-    // ── Spine guide line ─────────────────────────────────────────
-    const spineGood = smoothSpine > 0.65;
-    const spineCol = spineGood ? [80, 255, 160] : [255, 140, 60];
-    const spineAlpha = 50 + smoothSpine * 80;
-    p.stroke(spineCol[0], spineCol[1], spineCol[2], spineAlpha);
-    p.strokeWeight(1);
-    p.drawingContext.setLineDash([6, 6]);
-    p.line(kp.nose.x, kp.nose.y - 20, hmx, hmy + 20);
-    p.drawingContext.setLineDash([]);
-
-    // ── Shoulder level bar ────────────────────────────────────────
-    const shGood = smoothShoulder > 0.65;
-    const shCol  = shGood ? [80, 255, 160] : [255, 140, 60];
-    const shAlpha = 50 + smoothShoulder * 80;
-    p.stroke(shCol[0], shCol[1], shCol[2], shAlpha);
-    p.strokeWeight(1.5);
-    p.line(kp.leftShoulder.x, kp.leftShoulder.y, kp.rightShoulder.x, kp.rightShoulder.y);
-
-    // Tilt arrow on higher shoulder
-    if (!shGood && Math.abs(smoothShoulderTilt) > 0.05) {
-      const higher = smoothShoulderTilt > 0 ? kp.leftShoulder : kp.rightShoulder;
-      const dir    = smoothShoulderTilt > 0 ? -1 : 1;
-      p.stroke(255, 120, 60, 180);
-      p.strokeWeight(2);
-      p.line(higher.x, higher.y - 12, higher.x + dir * 14, higher.y - 22);
-      p.line(higher.x + dir * 14, higher.y - 22, higher.x + dir * 8, higher.y - 22);
-      p.line(higher.x + dir * 14, higher.y - 22, higher.x + dir * 14, higher.y - 16);
-    }
-
-    // ── Hip level bar ─────────────────────────────────────────────
-    if (kp.leftHip && kp.rightHip) {
-      const hipGood = smoothHip > 0.65;
-      const hipCol  = hipGood ? [80, 255, 160] : [255, 140, 60];
-      p.stroke(hipCol[0], hipCol[1], hipCol[2], 40 + smoothHip * 60);
-      p.strokeWeight(1.2);
-      p.line(kp.leftHip.x, kp.leftHip.y, kp.rightHip.x, kp.rightHip.y);
-    }
-
-    p.noStroke();
-  }
-
-  // ─── Pose status text ─────────────────────────────────────────────
-  function updatePoseStatus(align) {
-    const msgs = [];
-    if (smoothShoulder < 0.5) {
-      msgs.push(smoothShoulderTilt > 0 ? '← 왼쪽 어깨를 내려주세요' : '오른쪽 어깨를 내려주세요 →');
-    }
-    if (smoothSpine < 0.5) {
-      msgs.push(smoothSpineLean > 0 ? '→ 몸이 오른쪽으로 기울었습니다' : '← 몸이 왼쪽으로 기울었습니다');
-    }
-    if (meditationScore > 0.75) {
-      document.getElementById('pose-status').textContent = '✨ 차크라가 열리고 있습니다';
-    } else if (msgs.length > 0) {
-      document.getElementById('pose-status').textContent = msgs[0];
-    } else {
-      document.getElementById('pose-status').textContent = '🧘 자세를 유지하세요';
-    }
-  }
-
-  // ─── Draw skeleton ───────────────────────────────────────────────
-  function drawSkeleton(p, pose) {
-    const kp = {};
-    for (const k of pose.keypoints) {
-      if (k.score > 0.4) kp[k.part] = mapPt(k.position, p);
-    }
-
-    const connections = [
-      ['nose','leftEye'],['nose','rightEye'],
-      ['leftShoulder','rightShoulder'],
-      ['leftShoulder','leftElbow'],['leftElbow','leftWrist'],
-      ['rightShoulder','rightElbow'],['rightElbow','rightWrist'],
-      ['leftShoulder','leftHip'],['rightShoulder','rightHip'],
-      ['leftHip','rightHip'],
-      ['leftHip','leftKnee'],['leftKnee','leftAnkle'],
-      ['rightHip','rightKnee'],['rightKnee','rightAnkle'],
-    ];
-
-    p.stroke(120, 80, 200, 80);
-    p.strokeWeight(1.5);
-    for (const [a, b] of connections) {
-      if (kp[a] && kp[b]) {
-        p.line(kp[a].x, kp[a].y, kp[b].x, kp[b].y);
-      }
-    }
-    p.noStroke();
-  }
-
-  // ─── Draw chakras — each one reacts to its own alignment score ───
-  function drawChakras(p, positions) {
-    const t = p.frameCount;
-
-    for (let i = 0; i < CHAKRAS.length; i++) {
-      const ch  = CHAKRAS[i];
-      const pos = positions[i];
-      const act = chakraActivations[i]; // 0–1
-
-      // Pulse only beats when activated
-      const pulse      = 0.5 + 0.5 * Math.sin(t * 0.04 + i * 0.9);
-      const breathMod  = 0.6 + 0.4 * breathPhase;
-      const totalPulse = pulse * breathMod * Math.max(0.08, act);
-
-      // Dormant: small grey dot. Active: full color with glow.
-      const baseR = 6 + act * 10;
-      const glowR = (10 + act * 35) * totalPulse;
-
-      if (act > 0.08) {
-        // Glow layers — intensity scales with activation
-        for (let g = 4; g >= 0; g--) {
-          const alpha = act * (8 + g * 12) * totalPulse;
-          p.fill(ch.glow[0], ch.glow[1], ch.glow[2], alpha);
-          p.ellipse(pos.x, pos.y, (glowR + g * 6) * 2, (glowR + g * 6) * 2);
-        }
-        // Core
-        p.fill(ch.color[0], ch.color[1], ch.color[2], 120 + act * 135);
-        p.ellipse(pos.x, pos.y, baseR * 2, baseR * 2);
-        // Highlight
-        p.fill(255, 255, 255, act * 130 * pulse);
-        p.ellipse(pos.x - baseR * 0.25, pos.y - baseR * 0.25, baseR * 0.55, baseR * 0.55);
-      } else {
-        // Dormant — dim grey pulse
-        const dimPulse = 0.3 + 0.15 * Math.sin(t * 0.025 + i);
-        p.fill(80, 70, 100, 120 * dimPulse);
-        p.ellipse(pos.x, pos.y, 10, 10);
-        p.fill(120, 110, 150, 80 * dimPulse);
-        p.ellipse(pos.x, pos.y, 18, 18);
-      }
-    }
-  }
-
-  // ─── Draw aura around the body ───────────────────────────────────
-  function drawAura(p, pose, score) {
-    const kp = {};
-    for (const k of pose.keypoints) {
-      if (k.score > 0.4) kp[k.part] = mapPt(k.position, p);
-    }
-    if (!kp.nose || !kp.leftHip) return;
-
-    const cx = kp.nose.x;
-    const cy = (kp.nose.y + (kp.leftHip ? kp.leftHip.y : kp.nose.y + 200)) / 2;
-    const h = Math.abs((kp.leftHip ? kp.leftHip.y : kp.nose.y + 200) - kp.nose.y);
-    const t = p.frameCount * 0.012;
-    const alpha = 8 + score * 15;
-
-    for (let layer = 0; layer < 4; layer++) {
-      const r = (h * 0.55 + layer * 15) * (0.9 + 0.1 * Math.sin(t + layer));
-      const hue = (t * 30 + layer * 25) % 360;
-      // Convert HSL-ish to RGB manually for the aura
-      const colors = [
-        [138, 43, 226], [75, 0, 130], [0, 100, 200], [0, 180, 120]
-      ];
-      const c = colors[layer % colors.length];
-      p.fill(c[0], c[1], c[2], alpha * (1 - layer * 0.2));
-      p.ellipse(cx, cy, r * 1.1, r * 1.6);
-    }
-  }
-
-  // ─── Particles — only emit from activated chakras ────────────────
-  function emitParticles(p, chakraPositions) {
-    for (let i = 0; i < CHAKRAS.length; i++) {
-      const act = chakraActivations[i];
-      if (act < 0.55) continue;
-      // More activation → more frequent emission
-      const rate = Math.floor(p.map(act, 0.55, 1, 8, 2));
-      if (p.frameCount % rate !== 0) continue;
-      const ch  = CHAKRAS[i];
-      const pos = chakraPositions[i];
-      particles.push({
-        x: pos.x + p.random(-8, 8),
-        y: pos.y + p.random(-8, 8),
-        vx: p.random(-0.6, 0.6),
-        vy: p.random(-2.2, -0.4),
-        life: 1,
-        decay: p.random(0.007, 0.018),
-        r: p.random(2, 4 + act * 3),
-        color: ch.glow,
-      });
-    }
-    if (particles.length > 350) particles.splice(0, particles.length - 350);
-  }
-
-  function updateParticles(p) {
-    for (let i = particles.length - 1; i >= 0; i--) {
-      const pt = particles[i];
-      pt.x += pt.vx;
-      pt.y += pt.vy;
-      pt.vy -= 0.01;
-      pt.life -= pt.decay;
-      if (pt.life <= 0) { particles.splice(i, 1); continue; }
-      p.fill(pt.color[0], pt.color[1], pt.color[2], pt.life * 180);
-      p.ellipse(pt.x, pt.y, pt.r * pt.life * 2, pt.r * pt.life * 2);
-    }
-  }
-
-  // ─── Breathing guide — clickable, mode-aware ─────────────────────
-  function drawBreathingGuide(p) {
-    const cx = 88, cy = p.height - 88;
-    const trackR = 42, hitR = 56;
-    const minFill = 14, maxFill = 32;
-    const fillR = minFill + (maxFill - minFill) * breathPhase;
-
-    const bMode = BREATH_MODES[breathModeIdx];
-    const bPh   = bMode.phases[breathPhaseIdx];
-    const prog  = Math.min(breathTimer / bPh.frames, 1);
-    const secsLeft = Math.ceil((bPh.frames - breathTimer) / 60);
-
-    // Hover detection (cursor is handled via mousemove listener)
-    const hovered = p.dist(p.mouseX, p.mouseY, cx, cy) < hitR;
-
-    // Phase colour
-    const col = bPh.label === '들숨' ? [100, 210, 255]
-              : bPh.label === '날숨' ? [167, 139, 250]
-              : [255, 195, 80]; // 참기
-
-    // Background disc
-    p.noStroke();
-    p.fill(10, 8, 28, hovered ? 200 : 160);
-    p.ellipse(cx, cy, hitR * 2, hitR * 2);
-
-    // Track ring (full circle, dim)
-    p.noFill();
-    p.stroke(50, 38, 80, 140);
-    p.strokeWeight(3.5);
-    p.ellipse(cx, cy, trackR * 2, trackR * 2);
-
-    // Progress arc
-    p.stroke(col[0], col[1], col[2], hovered ? 240 : 190);
-    p.strokeWeight(3.5);
-    p.arc(cx, cy, trackR * 2, trackR * 2,
-          -p.HALF_PI, -p.HALF_PI + p.TWO_PI * prog);
-
-    // Breathing fill bubble
-    p.noStroke();
-    const bubbleAlpha = 18 + breathPhase * 50;
-    p.fill(col[0], col[1], col[2], bubbleAlpha);
-    p.ellipse(cx, cy, fillR * 2, fillR * 2);
-
-    // Hover glow ring
-    if (hovered) {
-      const hp = 0.5 + 0.5 * Math.sin(p.frameCount * 0.12);
-      p.fill(167, 139, 250, 18 + hp * 14);
-      p.ellipse(cx, cy, hitR * 2, hitR * 2);
-    }
-
-    // Phase label (center)
-    p.fill(col[0], col[1], col[2], 230);
-    p.textAlign(p.CENTER, p.CENTER);
-    p.textFont('sans-serif');
-    p.textSize(12);
-    p.text(bPh.label, cx, cy - 5);
-
-    // Countdown seconds
-    p.fill(180, 160, 220, 170);
-    p.textSize(10);
-    p.text(secsLeft + 's', cx, cy + 8);
-
-    // Mode name below circle
-    p.fill(130, 100, 200, 200);
-    p.textSize(9);
-    p.text(bMode.name, cx, cy + trackR + 13);
-
-    // "클릭으로 변경" hint on hover
-    if (hovered) {
-      p.fill(167, 139, 250, 190);
-      p.textSize(8);
-      p.text('클릭으로 변경', cx, cy + trackR + 24);
-    }
-  }
-
-};
-
-// ─── Timer update ─────────────────────────────────────────────────────
-function updateTimer() {
-  const elapsed = Math.floor((Date.now() - sessionStart) / 1000);
-  const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
-  const s = String(elapsed % 60).padStart(2, '0');
-  document.getElementById('session-timer').textContent = `${m}:${s}`;
-}
-
-// ─── Boot ─────────────────────────────────────────────────────────────
-new p5(sketch, document.getElementById('canvas-container'));
-</script>
+
+  <!-- ── HERO ─────────────────────────────────────────────────── -->
+  <section class="hero">
+    <div class="hero-image hero-img-1"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <span class="hero-tag">오늘의 명상</span>
+      <h1>지금 이 순간,<br>나를 찾는 시간</h1>
+      <p>바쁜 일상 속 단 10분. 호흡에 집중하는 것만으로도 마음이 달라집니다.</p>
+      <div class="hero-btns">
+        <a href="app.html" class="btn-primary">AI 명상 시작하기</a>
+        <a href="guide.html" class="btn-ghost">입문 가이드</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── LATEST STRIP ─────────────────────────────────────────── -->
+  <section class="latest-strip">
+    <div class="container">
+      <div class="latest-header">
+        <h2>최신 아티클</h2>
+        <a href="articles.html" class="see-all">전체 보기 →</a>
+      </div>
+      <div class="latest-grid">
+
+        <article class="latest-card">
+          <div class="card-img card-img-green"></div>
+          <div class="card-body">
+            <span class="cat cat-green">명상법</span>
+            <h3><a href="#">아침 5분 호흡 명상으로 하루를 여는 법</a></h3>
+            <p>눈을 뜨자마자 휴대폰 대신 호흡에 집중해 보세요. 단 5분이 하루의 질을 바꿉니다.</p>
+            <span class="read-time">5분 읽기</span>
+          </div>
+        </article>
+
+        <article class="latest-card">
+          <div class="card-img card-img-amber"></div>
+          <div class="card-body">
+            <span class="cat cat-amber">건강</span>
+            <h3><a href="#">스트레스를 줄이는 마음챙김 기법 5가지</a></h3>
+            <p>일상에서 바로 실천할 수 있는 마음챙김 기술들. 과학이 증명한 방법들입니다.</p>
+            <span class="read-time">7분 읽기</span>
+          </div>
+        </article>
+
+        <article class="latest-card">
+          <div class="card-img card-img-teal"></div>
+          <div class="card-body">
+            <span class="cat cat-teal">과학</span>
+            <h3><a href="#">명상이 뇌 구조를 바꾼다: 최신 연구 결과</a></h3>
+            <p>8주 명상 후 회백질 밀도가 증가한다는 하버드 연구를 소개합니다.</p>
+            <span class="read-time">8분 읽기</span>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FEATURED ARTICLE ─────────────────────────────────────── -->
+  <section class="featured-section">
+    <div class="container">
+      <div class="featured-article">
+        <div class="featured-img featured-img-purple"></div>
+        <div class="featured-text">
+          <span class="cat cat-purple">편집장 추천</span>
+          <h2>수면 전 바디 스캔 명상: 깊은 잠을 위한 20분 가이드</h2>
+          <p class="featured-desc">
+            잠들기 전, 발끝부터 머리끝까지 몸을 천천히 훑어 내려가는 바디 스캔 명상은 불면증 해소에 탁월한 효과가 있습니다. 매사추세츠 대학교 마음챙김 센터에서 개발한 이 기법은 전 세계 수백만 명이 실천하고 있습니다.
+          </p>
+          <ul class="featured-bullets">
+            <li>✦ 긴장된 근육 이완에 효과적</li>
+            <li>✦ 잠드는 시간 평균 40% 단축</li>
+            <li>✦ 매일 20분, 2주면 변화를 느낍니다</li>
+          </ul>
+          <a href="#" class="btn-link">전체 가이드 읽기 →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── GETTING STARTED ──────────────────────────────────────── -->
+  <section class="getting-started">
+    <div class="container">
+      <div class="section-head">
+        <h2>명상이 처음이신가요?</h2>
+        <p>누구나 시작할 수 있습니다. 단 한 번의 호흡부터 시작하세요.</p>
+      </div>
+      <div class="start-grid">
+
+        <div class="start-card">
+          <div class="start-icon">🌱</div>
+          <h3>호흡 명상</h3>
+          <p>가장 기본적인 명상. 코로 들이쉬고 입으로 내쉬며 호흡에만 집중합니다.</p>
+          <a href="#" class="btn-link">시작하기 →</a>
+        </div>
+
+        <div class="start-card">
+          <div class="start-icon">🧘</div>
+          <h3>바디 스캔</h3>
+          <p>온몸을 의식하며 긴장을 풀어나가는 명상. 수면 전 특히 효과적입니다.</p>
+          <a href="#" class="btn-link">시작하기 →</a>
+        </div>
+
+        <div class="start-card">
+          <div class="start-icon">🤖</div>
+          <h3>AI 자세 교정</h3>
+          <p>카메라로 자세를 분석하고 차크라 포인트를 실시간으로 시각화합니다.</p>
+          <a href="app.html" class="btn-link">앱 열기 →</a>
+        </div>
+
+        <div class="start-card">
+          <div class="start-icon">🎵</div>
+          <h3>사운드 명상</html>
+          <p>자연 소리나 바이노럴 비트를 활용해 더 깊은 집중 상태로 들어갑니다.</p>
+          <a href="#" class="btn-link">시작하기 →</a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── AI APP PROMO ──────────────────────────────────────────── -->
+  <section class="app-promo">
+    <div class="container">
+      <div class="promo-inner">
+        <div class="promo-text">
+          <span class="promo-badge">NEW</span>
+          <h2>AI가 당신의 자세를 실시간으로 분석합니다</h2>
+          <p>
+            카메라 앞에 앉기만 하면 PoseNet AI가 척추 정렬과 어깨 균형을 감지합니다.
+            7개 차크라 포인트가 자세에 따라 빛나며 올바른 명상 자세를 안내합니다.
+          </p>
+          <ul class="promo-list">
+            <li>✓ 실시간 척추·어깨 정렬 감지</li>
+            <li>✓ 7개 차크라 시각화</li>
+            <li>✓ 3가지 호흡 가이드 (일반 / 4-7-8 / 박스)</li>
+            <li>✓ 완전 무료 · 설치 불필요</li>
+          </ul>
+          <a href="app.html" class="btn-primary">무료로 체험하기</a>
+        </div>
+        <div class="promo-visual">
+          <div class="promo-phone">
+            <div class="phone-screen">
+              <div class="chakra-preview">
+                <div class="cp cp1"></div>
+                <div class="cp cp2"></div>
+                <div class="cp cp3"></div>
+                <div class="cp cp4"></div>
+                <div class="cp cp5"></div>
+                <div class="cp cp6"></div>
+                <div class="cp cp7"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── MORE ARTICLES ─────────────────────────────────────────── -->
+  <section class="more-articles">
+    <div class="container">
+      <div class="section-head">
+        <h2>인기 아티클</h2>
+        <a href="articles.html" class="see-all">전체 보기 →</a>
+      </div>
+      <div class="articles-grid">
+
+        <article class="article-card">
+          <div class="card-img card-img-rose"></div>
+          <div class="card-body">
+            <span class="cat cat-rose">마음챙김</span>
+            <h3><a href="#">감정에 휩쓸리지 않는 법: 관찰자 시점 명상</a></h3>
+            <span class="read-time">6분 읽기</span>
+          </div>
+        </article>
+
+        <article class="article-card">
+          <div class="card-img card-img-blue"></div>
+          <div class="card-body">
+            <span class="cat cat-teal">건강</span>
+            <h3><a href="#">직장인을 위한 3분 데스크 명상</a></h3>
+            <span class="read-time">3분 읽기</span>
+          </div>
+        </article>
+
+        <article class="article-card">
+          <div class="card-img card-img-amber"></div>
+          <div class="card-body">
+            <span class="cat cat-amber">과학</span>
+            <h3><a href="#">코르티솔과 명상: 스트레스 호르몬을 낮추는 방법</a></h3>
+            <span class="read-time">9분 읽기</span>
+          </div>
+        </article>
+
+        <article class="article-card">
+          <div class="card-img card-img-green"></div>
+          <div class="card-body">
+            <span class="cat cat-green">명상법</span>
+            <h3><a href="#">자비 명상(Loving-Kindness)으로 관계 회복하기</a></h3>
+            <span class="read-time">7분 읽기</span>
+          </div>
+        </article>
+
+        <article class="article-card">
+          <div class="card-img card-img-purple"></div>
+          <div class="card-body">
+            <span class="cat cat-purple">마음챙김</span>
+            <h3><a href="#">밥을 먹으며 하는 마음챙김: 식사 명상 가이드</a></h3>
+            <span class="read-time">5분 읽기</span>
+          </div>
+        </article>
+
+        <article class="article-card">
+          <div class="card-img card-img-teal"></div>
+          <div class="card-body">
+            <span class="cat cat-teal">건강</span>
+            <h3><a href="#">명상과 면역력: 과학이 밝힌 놀라운 연관성</a></h3>
+            <span class="read-time">8분 읽기</span>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── QUOTE ─────────────────────────────────────────────────── -->
+  <section class="quote-section">
+    <div class="container">
+      <blockquote>
+        <p>"명상은 뭔가를 하는 것이 아니라, 그냥 있는 것입니다."</p>
+        <cite>— 존 카밧진, MBSR 창시자</cite>
+      </blockquote>
+    </div>
+  </section>
+
+  <!-- ── NEWSLETTER ────────────────────────────────────────────── -->
+  <section class="newsletter">
+    <div class="container">
+      <div class="newsletter-inner">
+        <div class="newsletter-text">
+          <h2>매주 명상 팁을 받아보세요</h2>
+          <p>가이드 명상, 최신 연구, 일상 마음챙김 팁을 매주 무료로 전달합니다.</p>
+        </div>
+        <form class="newsletter-form" onsubmit="handleSubscribe(event)">
+          <input type="email" placeholder="이메일 주소 입력" required />
+          <button type="submit">구독하기</button>
+        </form>
+        <p class="newsletter-note">스팸 없음. 언제든 구독 취소 가능.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ────────────────────────────────────────────────── -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+
+        <div class="footer-brand">
+          <a href="index.html" class="logo-link footer-logo">
+            <svg viewBox="0 0 260 70" width="130" height="35" aria-label="나온 명상">
+              <text x="2"  y="54" class="logo-green">나</text>
+              <text x="58" y="54" class="logo-green">온</text>
+              <text x="138" y="54" class="logo-amber">명</text>
+              <text x="196" y="54" class="logo-amber">상</text>
+            </svg>
+          </a>
+          <p>건강한 마음, 건강한 삶.<br>나온 명상은 누구나 명상을 시작할 수 있도록 돕습니다.</p>
+          <div class="social-links">
+            <a href="#" aria-label="Instagram">📸</a>
+            <a href="#" aria-label="YouTube">▶</a>
+            <a href="#" aria-label="Kakao">💬</a>
+          </div>
+        </div>
+
+        <div class="footer-col">
+          <h4>명상 가이드</h4>
+          <ul>
+            <li><a href="#">호흡 명상</a></li>
+            <li><a href="#">바디 스캔</a></li>
+            <li><a href="#">자비 명상</a></li>
+            <li><a href="#">걷기 명상</a></li>
+            <li><a href="#">AI 자세 교정</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>주제별</h4>
+          <ul>
+            <li><a href="#">스트레스 관리</a></li>
+            <li><a href="#">수면 개선</a></li>
+            <li><a href="#">집중력 향상</a></li>
+            <li><a href="#">감정 조절</a></li>
+            <li><a href="#">관계 개선</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>나온 명상</h4>
+          <ul>
+            <li><a href="#">소개</a></li>
+            <li><a href="#">팀</a></li>
+            <li><a href="#">광고 문의</a></li>
+            <li><a href="#">개인정보처리방침</a></li>
+            <li><a href="#">이용약관</a></li>
+          </ul>
+        </div>
+
+      </div>
+
+      <div class="footer-bottom">
+        <p>© 2025 나온 명상. All rights reserved.</p>
+        <p>건강한 마음이 건강한 세상을 만듭니다.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="main.js"></script>
 </body>
 </html>
